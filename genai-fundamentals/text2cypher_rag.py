@@ -22,6 +22,25 @@ t2c_llm = OpenAILLM(
     model_params={"temperature": 0} # The temperature is set to 0. 
 )                                   # When generating Cypher queries, you want the output to be deterministic and precise.
 
+# Specify your own Neo4j schema
+neo4j_schema = """
+Node properties:
+Person {name: STRING, born: INTEGER}
+Movie {tagline: STRING, title: STRING, released: INTEGER}
+Genre {name: STRING}
+User {name: STRING}
+
+Relationship properties:
+ACTED_IN {role: STRING}
+RATED {rating: INTEGER}
+
+The relationships:
+(:Person)-[:ACTED_IN]->(:Movie)
+(:Person)-[:DIRECTED]->(:Movie)
+(:User)-[:RATED]->(:Movie)
+(:Movie)-[:IN_GENRE]->(:Genre)
+"""
+
 # Cypher examples as input/query pairs
 examples = [
     "USER INPUT: 'Get user ratings for a movie?' QUERY: MATCH (u:User)-[r:RATED]->(m:Movie) WHERE m.title = 'Movie Title' RETURN r.rating"
@@ -31,15 +50,17 @@ examples = [
 retriever = Text2CypherRetriever(
     driver=driver,
     llm=t2c_llm,
+    neo4j_schema=neo4j_schema,
     examples=examples,
 )
 
 llm = OpenAILLM(model_name="gpt-4.1-nano", model_params={"temperature": 0.5})
 rag = GraphRAG(retriever=retriever, llm=llm)
 
-query_text = "Which movies did Hugo Weaving star in?"
+# query_text = "Which movies did Hugo Weaving star in?"
 # query_text = "What user gives the lowest ratings?"
-
+query_text = "How many movies are in the Action genre?"
+# query_text = "What year was the movie Babe released?"
 
 response = rag.search(
     query_text=query_text,
