@@ -31,13 +31,14 @@ examples = [
 retriever = Text2CypherRetriever(
     driver=driver,
     llm=t2c_llm,
+    examples=examples,
 )
 
 llm = OpenAILLM(model_name="gpt-4.1-nano", model_params={"temperature": 0.5})
 rag = GraphRAG(retriever=retriever, llm=llm)
 
-# query_text = "Which movies did Hugo Weaving star in?"
-query_text = "What user gives the lowest ratings?"
+query_text = "Which movies did Hugo Weaving star in?"
+# query_text = "What user gives the lowest ratings?"
 
 
 response = rag.search(
